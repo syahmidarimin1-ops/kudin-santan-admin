@@ -12,28 +12,34 @@ export default function Dashboard() {
     const today = new Date().toISOString().split("T")[0]
 
     // Total Today
-    const { data: todayData } = await supabase
+    const { data: todayData } = await supabase!
       .from("orders")
       .select("total_amount")
       .gte("order_date", today)
 
     const todaySum =
-      todayData?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0
+      todayData?.reduce(
+        (sum: number, o: any) => sum + Number(o.total_amount),
+        0
+      ) || 0
 
     setTodayTotal(todaySum)
 
     // Total All Time
-    const { data: allData } = await supabase
+    const { data: allData } = await supabase!
       .from("orders")
       .select("total_amount")
 
     const allSum =
-      allData?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0
+      allData?.reduce(
+        (sum: number, o: any) => sum + Number(o.total_amount),
+        0
+      ) || 0
 
     setAllTimeTotal(allSum)
 
     // Vendor Summary Today
-    const { data: vendorData } = await supabase
+    const { data: vendorData } = await supabase!
       .from("orders")
       .select(`
         total_amount,
@@ -43,9 +49,9 @@ export default function Dashboard() {
       `)
       .gte("order_date", today)
 
-    const grouped: any = {}
+    const grouped: Record<string, number> = {}
 
-    vendorData?.forEach((o) => {
+    vendorData?.forEach((o: any) => {
       const name = o.vendors?.name || "Unknown"
       grouped[name] = (grouped[name] || 0) + Number(o.total_amount)
     })
