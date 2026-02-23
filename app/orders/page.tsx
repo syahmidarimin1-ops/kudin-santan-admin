@@ -7,9 +7,9 @@ import Link from "next/link"
 export default function Orders() {
   const [vendors, setVendors] = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
-  const [vendorId, setVendorId] = useState("")
-  const [kg, setKg] = useState("")
-  const [price, setPrice] = useState("")
+  const [vendorId, setVendorId] = useState<string>("")
+  const [kg, setKg] = useState<string>("")
+  const [price, setPrice] = useState<string>("")
 
   // =========================
   // FETCH VENDORS
@@ -24,11 +24,14 @@ export default function Orders() {
       return
     }
 
-    setVendors(data || [])
+    if (data && data.length > 0) {
+      setVendors(data)
+      setVendorId(data[0].id) // AUTO SELECT FIRST VENDOR
+    }
   }
 
   // =========================
-  // FETCH ORDERS (WITH JOIN)
+  // FETCH ORDERS
   // =========================
   async function fetchOrders() {
     const { data, error } = await supabase
@@ -55,13 +58,15 @@ export default function Orders() {
   }
 
   // =========================
-  // ADD ORDER + AUTO INVOICE
+  // ADD ORDER
   // =========================
   async function addOrder() {
     if (!vendorId || !kg || !price) {
       alert("Complete all fields")
       return
     }
+
+    console.log("Selected vendor:", vendorId)
 
     const total = Number(kg) * Number(price)
 
@@ -78,8 +83,8 @@ export default function Orders() {
 
     const { error } = await supabase.from("orders").insert([
       {
-        vendor_id: vendorId, // ✅ UUID terus hantar string
-        order_date: today.toISOString(), // ✅ ISO format
+        vendor_id: vendorId, // ✅ UUID STRING (NO Number())
+        order_date: today,
         kg: Number(kg),
         price_per_kg: Number(price),
         total_amount: total,
@@ -89,10 +94,10 @@ export default function Orders() {
 
     if (error) {
       alert(error.message)
+      console.log(error)
       return
     }
 
-    setVendorId("")
     setKg("")
     setPrice("")
     fetchOrders()
@@ -107,14 +112,12 @@ export default function Orders() {
     <div className="min-h-screen bg-gray-100 p-10">
       <h1 className="text-2xl font-bold mb-6">Order Management</h1>
 
-      {/* FORM */}
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <select
           className="border p-2 w-full mb-4"
           value={vendorId}
           onChange={(e) => setVendorId(e.target.value)}
         >
-          <option value="">Select Vendor</option>
           {vendors.map((v) => (
             <option key={v.id} value={v.id}>
               {v.name}
@@ -147,7 +150,6 @@ export default function Orders() {
         </button>
       </div>
 
-      {/* LIST */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="font-semibold mb-4">Order List</h2>
 
