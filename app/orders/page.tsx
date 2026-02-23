@@ -2,31 +2,25 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "../../lib/supabase"
-import Link from "next/link"
 
 export default function Orders() {
   const [vendors, setVendors] = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
-  const [vendorId, setVendorId] = useState<string>("")
-  const [kg, setKg] = useState<string>("")
-  const [price, setPrice] = useState<string>("")
+  const [vendorId, setVendorId] = useState("")
+  const [kg, setKg] = useState("")
+  const [price, setPrice] = useState("")
 
   // =========================
   // FETCH VENDORS
   // =========================
   async function fetchVendors() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("vendors")
       .select("id, name")
 
-    if (error) {
-      console.log(error)
-      return
-    }
-
     if (data && data.length > 0) {
       setVendors(data)
-      setVendorId(data[0].id) // AUTO SELECT FIRST VENDOR
+      setVendorId(data[0].id)
     }
   }
 
@@ -42,19 +36,18 @@ export default function Orders() {
         kg,
         price_per_kg,
         total_amount,
-        created_at,
+        status,
         vendors (
           name
         )
       `)
       .order("created_at", { ascending: false })
 
-    if (error) {
+    if (!error) {
+      setOrders(data || [])
+    } else {
       console.log(error)
-      return
     }
-
-    setOrders(data || [])
   }
 
   // =========================
@@ -65,8 +58,6 @@ export default function Orders() {
       alert("Complete all fields")
       return
     }
-
-    console.log("Selected vendor:", vendorId)
 
     const total = Number(kg) * Number(price)
 
@@ -83,23 +74,33 @@ export default function Orders() {
 
     const { error } = await supabase.from("orders").insert([
       {
-        vendor_id: vendorId, // ✅ UUID STRING (NO Number())
-        order_date: today,
+        vendor_id: vendorId,
         kg: Number(kg),
         price_per_kg: Number(price),
         total_amount: total,
-        invoice_no: invoiceNo
+        invoice_no: invoiceNo,
+        status: "pending"
       }
     ])
 
-    if (error) {
+    if (!error) {
+      setKg("")
+      setPrice("")
+      fetchOrders()
+    } else {
       alert(error.message)
-      console.log(error)
-      return
     }
+  }
 
-    setKg("")
-    setPrice("")
+  // =========================
+  // UPDATE STATUS
+  // =========================
+  async function updateStatus(id: string, newStatus: string) {
+    await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", id)
+
     fetchOrders()
   }
 
@@ -112,6 +113,7 @@ export default function Orders() {
     <div className="min-h-screen bg-gray-100 p-10">
       <h1 className="text-2xl font-bold mb-6">Order Management</h1>
 
+      {/* FORM */}
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <select
           className="border p-2 w-full mb-4"
@@ -150,6 +152,7 @@ export default function Orders() {
         </button>
       </div>
 
+      {/* ORDER LIST */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="font-semibold mb-4">Order List</h2>
 
@@ -160,27 +163,29 @@ export default function Orders() {
         {orders.map((o) => (
           <div key={o.id} className="border-b py-4">
             <p className="font-semibold text-lg">
-              {o.vendors?.name || "Vendor not found"}
-            </p>
-
-            <p className="text-xs text-gray-400 mb-2">
-              {o.invoice_no}
+              {o.vendors?.name}
             </p>
 
             <p className="text-sm text-gray-500">
               {o.kg} KG × RM{o.price_per_kg}
             </p>
 
-            <p className="text-sm font-semibold mb-2">
+            <p className="font-semibold">
               Total: RM{o.total_amount}
             </p>
 
-            <Link
-              href={`/invoice/${o.id}`}
-              className="text-blue-600 text-sm underline"
-            >
-              View Invoice
-            </Link>
+            <div className="mt-2">
+              <select
+                value={o.status}
+                onChange={(e) =>
+                  updateStatus(o.id, e.target.value)
+                }
+                className="border px-2 py-1 rounded"
+              >
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
           </div>
         ))}
       </div>
