@@ -78,8 +78,8 @@ export default function Orders() {
 
     const { error } = await supabase.from("orders").insert([
       {
-        vendor_id: Number(vendorId),
-        order_date: today,
+        vendor_id: vendorId, // ✅ UUID terus hantar string
+        order_date: today.toISOString(), // ✅ ISO format
         kg: Number(kg),
         price_per_kg: Number(price),
         total_amount: total,
@@ -92,6 +92,7 @@ export default function Orders() {
       return
     }
 
+    setVendorId("")
     setKg("")
     setPrice("")
     fetchOrders()
