@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
 
@@ -9,12 +11,17 @@ export default function Dashboard() {
     new Date().toISOString().slice(0, 7)
   )
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  )
+  const supabase =
+    typeof window !== "undefined"
+      ? createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+      : null
 
   async function fetchOrders() {
+    if (!supabase) return
+
     const { data } = await supabase
       .from("orders")
       .select("*")
@@ -76,20 +83,20 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-white text-black p-4 md:p-10">
 
-      <h1 className="text-2xl md:text-3xl font-bold mb-8 text-black">
+      <h1 className="text-2xl md:text-3xl font-bold mb-8">
         Dashboard
       </h1>
 
       {/* ================= DAILY ================= */}
       <div className="mb-12">
-        <h2 className="text-xl font-bold mb-6 text-black">
+        <h2 className="text-xl font-bold mb-6">
           Today
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 
           <div className="bg-white border rounded-2xl shadow p-6">
-            <p className="text-black font-medium">
+            <p className="font-medium">
               Sales Today
             </p>
             <h2 className="text-3xl font-bold text-green-600 mt-2">
@@ -98,7 +105,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-white border rounded-2xl shadow p-6">
-            <p className="text-black font-medium">
+            <p className="font-medium">
               Pending
             </p>
             <h2 className="text-3xl font-bold text-yellow-600 mt-2">
@@ -107,7 +114,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-white border rounded-2xl shadow p-6">
-            <p className="text-black font-medium">
+            <p className="font-medium">
               Cancelled
             </p>
             <h2 className="text-3xl font-bold text-red-600 mt-2">
@@ -116,7 +123,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-white border rounded-2xl shadow p-6">
-            <p className="text-black font-medium">
+            <p className="font-medium">
               All Time Paid
             </p>
             <h2 className="text-3xl font-bold mt-2">
@@ -131,12 +138,12 @@ export default function Dashboard() {
 
       <div className="bg-white border rounded-2xl shadow p-6">
 
-        <h2 className="text-xl font-bold mb-6 text-black">
+        <h2 className="text-xl font-bold mb-6">
           Monthly Report
         </h2>
 
         <div className="mb-8">
-          <label className="mr-3 font-semibold text-black">
+          <label className="mr-3 font-semibold">
             Select Month:
           </label>
           <input
@@ -150,7 +157,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 
           <div className="bg-gray-50 border rounded-xl p-6">
-            <p className="font-medium text-black">
+            <p className="font-medium">
               Monthly Sales
             </p>
             <h2 className="text-2xl font-bold text-green-600 mt-2">
@@ -159,7 +166,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-gray-50 border rounded-xl p-6">
-            <p className="font-medium text-black">
+            <p className="font-medium">
               Santan Sold
             </p>
             <h2 className="text-2xl font-bold mt-2">
@@ -168,7 +175,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-gray-50 border rounded-xl p-6">
-            <p className="font-medium text-black">
+            <p className="font-medium">
               Kelapa Parut Sold
             </p>
             <h2 className="text-2xl font-bold mt-2">
@@ -177,7 +184,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-gray-50 border rounded-xl p-6">
-            <p className="font-medium text-black">
+            <p className="font-medium">
               Pending (Month)
             </p>
             <h2 className="text-2xl font-bold text-yellow-600 mt-2">
